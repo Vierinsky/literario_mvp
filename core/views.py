@@ -1,16 +1,16 @@
-from django.http import HttpResponse
+from django.shortcuts import render
 
 
 
 def home(request):
     '''
-    Vista temporal de la página de inicio.
+    Renderiza la página de inicio del proyecto.
     '''
-    return HttpResponse("Home del proyecto literario")
+    return render(request, "core/home.html")
 
 
 def about(request):
     '''
-    Vista temporal de la página sobre el proyecto.
+    Renderiza la página sobre el proyecto.
     '''
-    return HttpResponse("sobre el proyecto literario")
+    return render(request, "core/about.html")
