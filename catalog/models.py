@@ -35,7 +35,7 @@ class Book(models.Model):
     synopsis = models.TextField()
     genre_main = models.CharField(
         max_length=50,
-        choices=GenreChoices.choices
+        choices=GenreChoices.choices,
         db_index=True
     )
     page_count = models.PositiveBigIntegerField(null=True, blank=True)
