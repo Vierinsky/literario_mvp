@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %} Catálogo | Literario MVP {% endblock %}
+
+{% block content %}
+<h1>Catálogo</h1>
+<p>Lista pública inicial de libros cargados en el proyecto</p>
+
+{% if books %}
+    <ul>
+        {% for book un books %}
+            <li>
+                <strong>{{ book.title }}</strong><br>
+                Autor: {{ book.author.name }}<br>
+                Género: {{ book.get_genre_main_display }}<br>
+
+                {% if book.page_count %}
+                    Páginas: {{ book.page_count }}<br>
+                {% endif %}
+
+                {% if book.available_in_spanish %}
+                    Disponible en español: Sí
+                {% else %}
+                    Disponible en español: No
+                {% endif %}
+            </li>
+            <br>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay libros cargados todavía</p>
+{% endif %}
+{% endblock %}
