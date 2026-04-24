@@ -54,44 +54,44 @@ class Book(models.Model):
         '''
         return f"{self.title} - {self.author.name}"
     
-    class BookTag(models.Model):
-        '''
-        Representa un tag curatorial asociado a un libro.
-        '''
+class BookTag(models.Model):
+    '''
+    Representa un tag curatorial asociado a un libro.
+    '''
 
-        class TagTypeChoices(models.TextChoices):
-            TONE_PRIMARY = "tone_primary", "Tono principal"
-            TONE_SECONDARY = "tone_secondary", "Tono secundario"
-            PACE = "pace", "Ritmo"
-            THEME = "theme", "Tematica"
+    class TagTypeChoices(models.TextChoices):
+        TONE_PRIMARY = "tone_primary", "Tono principal"
+        TONE_SECONDARY = "tone_secondary", "Tono secundario"
+        PACE = "pace", "Ritmo"
+        THEME = "theme", "Tematica"
 
-        book = models.ForeignKey(
-            Book,
-            on_delete=models.CASCADE,
-            related_name="tags",
-        )
-        tag_type = models.CharField(
-            max_length=50,
-            choices=TagTypeChoices.choices,
-            db_index=True,
-        )
-        tag_value = models.CharField(
-            max_length=100,
-            db_index=True,
-        )
-        created_at = models.DateTimeField(auto_now_add=True)
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        related_name="tags",
+    )
+    tag_type = models.CharField(
+        max_length=50,
+        choices=TagTypeChoices.choices,
+        db_index=True,
+    )
+    tag_value = models.CharField(
+        max_length=100,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-        class Meta:
-            constraints = [
-                models.UniqueConstraint(
-                    fields=["book", "tag_type", "tag_value"],
-                    name= "unique_book_tag_type_value",
-                )
-            ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["book", "tag_type", "tag_value"],
+                name= "unique_book_tag_type_value",
+            )
+        ]
 
-        def __str__(self):
-            """
-            Devuelve una representación legible del tag.
-            """
-            return f"{self.book.title} | {self.tag_type}: | {self.tag_value}"
+    def __str__(self):
+        """
+        Devuelve una representación legible del tag.
+        """
+        return f"{self.book.title} | {self.tag_type}: | {self.tag_value}"
         
