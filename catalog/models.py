@@ -23,8 +23,8 @@ class Book(models.Model):
     '''
 
     class GenreChoices(models.TextChoices):
-        FANTASY = "fantasy", "Fantasia"
-        SCIENCE_FICTION = "science_fiction", "Ciencia ficcion"
+        FANTASY = "fantasy", "Fantasía"
+        SCIENCE_FICTION = "science_fiction", "Ciencia ficción"
 
     title = models.CharField(max_length=255, db_index=True)
     author = models.ForeignKey(
@@ -63,7 +63,7 @@ class BookTag(models.Model):
         TONE_PRIMARY = "tone_primary", "Tono principal"
         TONE_SECONDARY = "tone_secondary", "Tono secundario"
         PACE = "pace", "Ritmo"
-        THEME = "theme", "Tematica"
+        THEME = "theme", "Temática"
 
     book = models.ForeignKey(
         Book,
