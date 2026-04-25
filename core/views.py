@@ -6,7 +6,13 @@ def home(request):
     '''
     Renderiza la página de inicio del proyecto.
     '''
-    return render(request, "core/home.html")
+    form = BookSearchForm()
+
+    context = {
+        "form": form,
+    }
+
+    return render(request, "core/home.html", context)
 
 
 def about(request):
