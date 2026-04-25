@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados | Literario MVP{% endblock %}
+
+{% block content %}
+<h1>Resultados de búsqueda</h1>
+
+{% if submitted_data %}
+    <p>Por ahora esta página todavía no recomienda libros reales. Solo muestra lo que enviaste.</p>
+
+    <h2>Datos recibidos</h2>
+    <ul>
+        <li><strong>Texto libre:</strong> {{ submitted_data.query_text|default:"(vacío)" }}</li>
+        <li><strong>Tono:</strong> {{ submitted_data.tone|default:"(sin filtro)" }}</li>
+        <li><strong>Ritmo:</strong> {{ submitted_data.pace|default:"(sin filtro)" }}</li>
+        <li><strong>Longitud:</strong> {{ submitted_data.length|default:"(sin filtro)" }}</li>
+        <li><strong>Temática:</strong> {{ submitted_data.theme|default:"(sin filtro)" }}</li>
+        <li><strong>Incluir inglés:</strong> {{ submitted_data.include_english|yesno:"Sí,No" }}</li>
+    </ul>
+{% else %}
+    <p>No se recibió una búsqueda válida.</p>
+{% endif %}
+
+<p><a href="{% url 'home' %}">Volver a la home</a></p>
+{% endblock %}
