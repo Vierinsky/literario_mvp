@@ -3,6 +3,11 @@
 {% block title %}Home | Literario MVP{% endblock %}
 
 {% block content %}
-<h1>Bienvenido a Literario MVP</h1>
-<p>Esta será la home del recomendador literario.</p>
+<h1>Encuentra tu próxima lectura</h1>
+<p>Describe qué te gustaría leer y afina la búsqueda con filtros opcionales.</p>
+
+<form method="get" action="{% url 'search_results' %}">
+    {{form.as_p}}
+    <button type="submit">Buscar recomendaciones</button>
+</form>
 {% endblock %}
