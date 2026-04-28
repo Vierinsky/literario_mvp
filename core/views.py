@@ -4,6 +4,69 @@ from catalog.models import Book
 from .forms import BookSearchForm
 
 
+def _humanize_value(value):
+    """
+    Convierte valores internos del sistema en etiquetas legibles.
+    """
+    mapping = {
+        "hopeful": "esperanzador",
+        "melancholic": "melancólico",
+        "dark": "oscuro",
+        "unsettling": "inquietante",
+        "strange": "extraño",
+        "contemplative": "contemplativo",
+        "balanced": "equilibrado",
+        "fast": "ágil",
+        "romantasy": "romantasy",
+        "cozy": "cozy",
+        "dystopia": "distopía",
+        "horror": "horror",
+        "space_opera": "space opera",
+        "grimdark": "grimdark / dark fantasy",
+        "cli_fi": "cli-fi / ficción climática",
+        "political_intrigue": "intriga política",
+        "mythic_reimagining": "mitología / reimaginación",
+        "first_contact": "primer contacto alienígena",
+        "short": "corta",
+        "medium": "media",
+        "long": "larga",
+    }
+    return mapping.get(value, value)
+
+def _build_match_explanation(book, cleaned_data):
+    """
+    Construye una explicación breve y controlada para un libro recomendado.
+    """
+    fragments = []
+
+    tone = cleaned_data.get("tone")
+    pace = cleaned_data.get("pace")
+    theme = cleaned_data.get("theme")
+    length = cleaned_data.get("length")
+
+    if tone:
+        fragments.append(f"un tono {_humanize_value(tone)}")
+
+    if pace:
+        fragments.append(f"un ritmo {_humanize_value(pace)}")
+
+    if theme:
+        fragments.append(f"una veta de {_humanize_value(theme)}")
+
+    if length:
+        fragments.append(f"una longitud {_humanize_value(length)}")
+
+    if fragments:
+        joined = ", ".join(fragments[:-1])
+        if len(fragments) > 1:
+            joined = f"{joined} y {fragments[-1]}" if joined else fragments[-1]
+        else:
+            joined = fragments[0]
+
+        return f"Te lo recomendé porque encaja con {joined}."
+    
+    return "Te lo recomendé porque encaja razonablemente con los filtros seleccionados."
+
 def _get_filtered_books(cleaned_data):
     '''
     Retorna hasta 3 libros activos filtrados por tags curatoriales básicos.
@@ -44,8 +107,19 @@ def _get_filtered_books(cleaned_data):
 
     if not include_english:
         books = books.filter(available_in_spanish=True)
+    
+    books = books.distinct().order_by("title")[:3]
 
-    return books.distinct().order_by("title")[:3]
+    enriched_results = []
+    for book in books:
+        enriched_results.append(
+            {
+                "book": book,
+                "match_explanation": _build_match_explanation(book, cleaned_data),
+            }
+        )
+
+    return enriched_results
 
 def home(request):
     '''
@@ -77,12 +151,12 @@ def search_results(request):
     context = {
         "form": form,
         "submitted_data": None,
-        "books": [],
+        "results": [],
     }
 
     if form.is_valid():
         cleaned_data = form.cleaned_data
         context["submitted_data"] = form.cleaned_data
-        context["books"] = _get_filtered_books(cleaned_data)
+        context["results"] = _get_filtered_books(cleaned_data)
 
     return render(request, "core/search_results.html", context)
