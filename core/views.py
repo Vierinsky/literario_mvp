@@ -27,6 +27,7 @@ def _get_filtered_books(cleaned_data):
     tone = cleaned_data.get("tone")
     pace = cleaned_data.get("pace")
     theme = cleaned_data.get("theme")
+    length = cleaned_data.get("length")
     include_english = cleaned_data.get("include_english")
 
     if tone:
@@ -37,6 +38,9 @@ def _get_filtered_books(cleaned_data):
 
     if theme:
         books = books.filter(tags__tag_type="theme", tags__tag_value=theme)
+
+    if length:
+        books = books.filter(length_category=length)
 
     if not include_english:
         books = books.filter(available_in_spanish=True)
