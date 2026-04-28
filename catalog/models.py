@@ -26,6 +26,11 @@ class Book(models.Model):
         FANTASY = "fantasy", "Fantasía"
         SCIENCE_FICTION = "science_fiction", "Ciencia ficción"
 
+    class LengthCategoryChoices(models.TextChoices):
+        SHORT = "short", "Corto"
+        MEDIUM = "medium", "Medio"
+        LONG = "long", "Largo"
+    
     title = models.CharField(max_length=255, db_index=True)
     author = models.ForeignKey(
         Author,
@@ -39,6 +44,12 @@ class Book(models.Model):
         db_index=True
     )
     page_count = models.PositiveBigIntegerField(null=True, blank=True)
+    length_category = models.CharField(
+        max_length=20,
+        choices=LengthCategoryChoices.choices,
+        blank=True,
+        db_index=True,
+    )
     available_in_spanish = models.BooleanField(default=True, db_index=True)
     spanish_title = models.CharField(max_length=255, blank=True)
     original_language = models.CharField(max_length=255, blank=True)
@@ -47,6 +58,34 @@ class Book(models.Model):
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     upgraded_at = models.DateTimeField(auto_now=True)
+
+    def calculate_length_category(self):
+        '''
+        Deriva la categoría de longitud a partir de page_count.
+
+        Returns
+        -------
+        str
+            'short', 'medium' o 'long'. Retorna cadena vacía
+            si no hay page_count.
+        '''
+        if not self.page_count:
+            return ""
+        
+        if self.page_count < 300:
+            return self.LengthCategoryChoices.SHORT
+        
+        if self.page_count <= 600:
+            return self.LengthCategoryChoices.MEDIUM
+        
+        return self.LengthCategoryChoices.LONG
+    
+    def save(self, *args, **kwargs):
+        '''
+        Recalcula la categoría de longitud antes de guardar.
+        '''
+        self.length_category = self.calculate_length_category()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         '''
