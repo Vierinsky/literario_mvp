@@ -20,7 +20,7 @@
 
     <h2>Recomendaciones</h2>
 
-    {% if books %}
+    {% if results %}
         {% for result in results %}
             <article>
                 <h3>{{ result.book.title }}</h3>
@@ -28,10 +28,10 @@
                 <p><strong>Género:</strong> {{ result.book.get_genre_main_display }}</p>
 
                 {% if result.book.length_category %}
-                <p><strong>Longitud:</strong> {{ result..book.get_length_category_display }}</p>
+                <p><strong>Longitud:</strong> {{ result.book.get_length_category_display }}</p>
                 {% endif %}
                 
-                {% if result..book.page_count %}
+                {% if result.book.page_count %}
                     <p><strong>Páginas:</strong> {{ result.book.page_count }}</p>
                 {% endif %}
 
