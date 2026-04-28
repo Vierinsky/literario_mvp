@@ -27,6 +27,10 @@
                 <p><strong>Autor:</strong> {{ book.author.name }}</p>
                 <p><strong>Género:</strong> {{ book.get_genre_main_display }}</p>
 
+                {% if book.length_category %}
+                <p><strong>Longitud:</strong> {{ book.get_length_category_display }}</p>
+                {% endif %}
+                
                 {% if book.page_count %}
                     <p><strong>Páginas:</strong> {{ book.page_count }}</p>
                 {% endif %}
