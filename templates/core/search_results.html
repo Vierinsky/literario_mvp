@@ -6,9 +6,9 @@
 <h1>Resultados de búsqueda</h1>
 
 {% if submitted_data %}
-    <p>Por ahora esta página todavía no recomienda libros reales. Solo muestra lo que enviaste.</p>
+    <p>Búsqueda procesada con filtros básicos del catálogo.</p>
 
-    <h2>Datos recibidos</h2>
+    <h2>Tu búsqueda</h2>
     <ul>
         <li><strong>Texto libre:</strong> {{ submitted_data.query_text|default:"(vacío)" }}</li>
         <li><strong>Tono:</strong> {{ submitted_data.tone|default:"(sin filtro)" }}</li>
@@ -17,6 +17,38 @@
         <li><strong>Temática:</strong> {{ submitted_data.theme|default:"(sin filtro)" }}</li>
         <li><strong>Incluir inglés:</strong> {{ submitted_data.include_english|yesno:"Sí,No" }}</li>
     </ul>
+
+    <h2>Recomendaciones</h2>
+
+    {% if books %}
+        {% for books in books %}
+            <article>
+                <h3>{{ book.title }}</h3>
+                <p><strong>Autor:</strong> {{ book.author.name }}</p>
+                <p><strong>Género:</strong> {{ book.get_genre_main_display }}</p>
+
+                {% if book.page_count %}
+                    <p><strong>Páginas:</strong> {{ book.page_count }}</p>
+                {% endif %}
+
+                {% if book.synopsis %}
+                    <p>{{ book.synopsis }}</p>
+                {% endif %}
+
+                {% if book.tags.all %}
+                    <p>
+                        <strong>Tags:</strong>
+                        {% for tag in book.tags.all %}
+                            {{ tag.tag_type }} = {{ tag.tag_value }}{% if not forloop.last %} | {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            </article>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No encontré libros que coincidan con esos filtros todavía.</p>
+    {% endif %}
 {% else %}
     <p>No se recibió una búsqueda válida.</p>
 {% endif %}
