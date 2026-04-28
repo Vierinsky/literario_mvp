@@ -21,32 +21,25 @@
     <h2>Recomendaciones</h2>
 
     {% if books %}
-        {% for book in books %}
+        {% for result in results %}
             <article>
-                <h3>{{ book.title }}</h3>
-                <p><strong>Autor:</strong> {{ book.author.name }}</p>
-                <p><strong>Género:</strong> {{ book.get_genre_main_display }}</p>
+                <h3>{{ result.book.title }}</h3>
+                <p><strong>Autor:</strong> {{ result.book.author.name }}</p>
+                <p><strong>Género:</strong> {{ result.book.get_genre_main_display }}</p>
 
-                {% if book.length_category %}
-                <p><strong>Longitud:</strong> {{ book.get_length_category_display }}</p>
+                {% if result.book.length_category %}
+                <p><strong>Longitud:</strong> {{ result..book.get_length_category_display }}</p>
                 {% endif %}
                 
-                {% if book.page_count %}
-                    <p><strong>Páginas:</strong> {{ book.page_count }}</p>
+                {% if result..book.page_count %}
+                    <p><strong>Páginas:</strong> {{ result.book.page_count }}</p>
                 {% endif %}
 
-                {% if book.synopsis %}
-                    <p>{{ book.synopsis }}</p>
+                {% if result.book.synopsis %}
+                    <p>{{ result.book.synopsis }}</p>
                 {% endif %}
 
-                {% if book.tags.all %}
-                    <p>
-                        <strong>Tags:</strong>
-                        {% for tag in book.tags.all %}
-                            {{ tag.tag_type }} = {{ tag.tag_value }}{% if not forloop.last %} | {% endif %}
-                        {% endfor %}
-                    </p>
-                {% endif %}
+                <p><strong>Por qué te lo recomiendo:</strong> {{ result.match_explanation }}</p>                               
             </article>
             <hr>
         {% endfor %}
