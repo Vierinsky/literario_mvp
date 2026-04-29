@@ -46,7 +46,7 @@ class SearchResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        contraints = [
+        constraints = [
             models.UniqueConstraint(
                 fields=["search_request", "rank_position"],
                 name="unique_search_request_rank_position",
