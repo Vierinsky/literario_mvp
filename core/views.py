@@ -3,6 +3,32 @@ from django.shortcuts import render
 from catalog.models import Book
 from .forms import BookSearchForm
 
+import hashlib
+import uuid
+
+
+def _get_or_crate_session_id(request):
+    """
+    Obtiene una session_id anónima persistida en la sesión de Django.
+    """
+    session_id = request.session.get("literario_session_id")
+
+    if not session_id:
+        session_id = uuid.uuid4().hex
+        request.session["literario_session_id"] = session_id
+
+    return session_id
+
+
+def _hash_value(raw_value):
+    """
+    Devuelve un hash SHA-256 de un valor de texto.
+    """
+    if not raw_value:
+        return ""
+
+    return hashlib.sha256(raw_value.encode("utf-8")).hexdigest()
+
 
 def _humanize_value(value):
     """
