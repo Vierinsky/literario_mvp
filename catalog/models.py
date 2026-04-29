@@ -124,7 +124,7 @@ class BookTag(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["book", "tag_type", "tag_value"],
-                name= "unique_book_tag_type_value",
+                name="unique_book_tag_type_value",
             )
         ]
 
