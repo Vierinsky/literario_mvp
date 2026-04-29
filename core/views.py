@@ -2,12 +2,13 @@ from django.shortcuts import render
 
 from catalog.models import Book
 from .forms import BookSearchForm
+from tracking.models import SearchRequest, SearchResult
 
 import hashlib
 import uuid
 
 
-def _get_or_crate_session_id(request):
+def _get_or_create_session_id(request):
     """
     Obtiene una session_id anónima persistida en la sesión de Django.
     """
@@ -28,6 +29,40 @@ def _hash_value(raw_value):
         return ""
 
     return hashlib.sha256(raw_value.encode("utf-8")).hexdigest()
+
+
+def _persist_search(request, cleaned_data, results):
+    """
+    Guarda la búsqueda y los resultados mostrados.
+    """
+    session_id = _get_or_create_session_id(request)
+
+    user_agent = request.META.get("HTTP_USER_AGENT", "")
+    remote_addr = request.META.get("REMOTE_ADDR", "")
+
+    search_request = SearchRequest.objects.create(
+        session_id=session_id,
+        query_text=cleaned_data.get("query_text", ""),
+        tone_filter=cleaned_data.get("tone", ""),
+        pace_filter=cleaned_data.get("pace", ""),
+        theme_filter=cleaned_data.get("theme", ""),
+        length_filter=cleaned_data.get("length", ""),
+        include_english=cleaned_data.get("include_english", False),
+        user_agent_hash=_hash_value(user_agent),
+        ip_hash=_hash_value(remote_addr),
+    )
+
+    for index, result in enumerate(results, start=1):
+        SearchResult.objects.create(
+            search_request=search_request,
+            book=result["book"],
+            rank_position=index,
+            match_explanation=result["match_explanation"],
+            shown_to_user=True,
+            clicked=False,
+        )
+
+    return search_request
 
 
 def _humanize_value(value):
@@ -170,7 +205,8 @@ def about(request):
 def search_results(request):
     '''
     Renderiza una página de resultados inicial que muestra
-    los datos enviados por el formulario.
+    los datos enviados por el formulario y persiste la búsqueda
+    en tracking.
     '''
     form = BookSearchForm(request.GET or None)
 
@@ -182,7 +218,11 @@ def search_results(request):
 
     if form.is_valid():
         cleaned_data = form.cleaned_data
-        context["submitted_data"] = form.cleaned_data
-        context["results"] = _get_filtered_books(cleaned_data)
+        results = _get_filtered_books(cleaned_data)
+
+        context["submitted_data"] = cleaned_data
+        context["results"] = results
+
+        _persist_search(request, cleaned_data, results)
 
     return render(request, "core/search_results.html", context)
