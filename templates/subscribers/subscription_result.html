@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Suscripción | Literario MVP{% endblock %}
+
+{% block content %}
+<h1>Suscripción</h1>
+
+{% if success %}
+    <p>{{ message }}</p>
+
+    {% if subscriber %}
+        <p><strong>Email:</strong> {{ subscriber.email }}</p>
+        <p><strong>Fuente:</strong> {{ subscriber.get_source_display }}</p>
+    {% endif %}
+{% else %}
+    <p>{{ message }}</p>
+{% endif %}
+
+<p><a href="{% url 'home' %}">Volver a la home</a></p>
+{% endblock %}

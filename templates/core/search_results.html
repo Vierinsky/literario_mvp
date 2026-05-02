@@ -50,5 +50,18 @@
     <p>No se recibió una búsqueda válida.</p>
 {% endif %}
 
+{% if results %}
+    <section>
+        <h2>¿Quieres más recomendaciones?</h2>
+        <p>Déjame tu correo y más adelante esta parte se conectará con la secuencia de bienvenida del proyecto.</p>
+
+        <form method="post" action="{% url 'subscribe_email' %}">
+            {% csrf_token %}
+            {{ email_form.as_p }}
+            <button type="submit">Quiero recibir recomendaciones extra</button>
+        </form>
+    </section>
+{% endif %}
+
 <p><a href="{% url 'home' %}">Volver a la home</a></p>
 {% endblock %}

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'catalog',
     'tracking',
+    'subscribers',
 ]
 
 MIDDLEWARE = [

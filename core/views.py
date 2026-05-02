@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 from catalog.models import Book
 from .forms import BookSearchForm
+from subscribers.forms import EmailCaptureForm
 from tracking.models import SearchRequest, SearchResult
 
 import hashlib
@@ -214,6 +215,7 @@ def search_results(request):
         "form": form,
         "submitted_data": None,
         "results": [],
+        "email_form": EmailCaptureForm,
     }
 
     if form.is_valid():
