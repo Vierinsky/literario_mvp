@@ -12,6 +12,10 @@
         <p><strong>Email:</strong> {{ subscriber.email }}</p>
         <p><strong>Fuente:</strong> {{ subscriber.get_source_display }}</p>
     {% endif %}
+
+    {% if first_search_request %}
+        <p><strong>Búsqueda asociada:</strong> #{{ first_search_request.id }}</p>
+    {% endif %}
 {% else %}
     <p>{{ message }}</p>
 {% endif %}

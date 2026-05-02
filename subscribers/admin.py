@@ -11,6 +11,7 @@ class EmailSubscriberAdmin(admin.ModelAdmin):
         "id",
         "email",
         "source",
+        "first_search_request",
         "consent_newsletter",
         "is_active",
         "created_at",
