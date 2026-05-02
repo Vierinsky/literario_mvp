@@ -11,7 +11,7 @@ def subscribe_email(request):
     if request.method != "POST":
         return redirect("home")
     
-    form = EmailCaptureForm(request.PoST)
+    form = EmailCaptureForm(request.POST)
 
     if not form.is_valid():
         return render(
@@ -43,7 +43,7 @@ def subscribe_email(request):
 
     return render(
         request,
-        "subscriber/subscription_result.html",
+        "subscribers/subscription_result.html",
         {
             "success": True,
             "message": message,
