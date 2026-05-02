@@ -18,3 +18,8 @@ class EmailCaptureForm(forms.Form):
         label="Acepto recibir recomendaciones extra y el newsletter del proyecto.",
         required=True,
     )
+
+    search_request_id = forms.IntegerField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )

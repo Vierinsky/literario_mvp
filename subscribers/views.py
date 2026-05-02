@@ -1,6 +1,8 @@
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
+from tracking.models import SearchRequest
+
 from .forms import EmailCaptureForm
 from .models import EmailSubscriber
 
@@ -25,6 +27,11 @@ def subscribe_email(request):
     
     email = form.cleaned_data["email"]
     consent_newsletter = form.cleaned_data["consent_newsletter"]
+    search_request_id = form.cleaned_data.get("search_request_id")
+
+    first_search_request = None
+    if search_request_id:
+        first_search_request = SearchRequest.objects.filter(id=search_request_id).first()
 
     subscriber, created = EmailSubscriber.objects.update_or_create(
         email=email,
@@ -32,6 +39,7 @@ def subscribe_email(request):
             "source": EmailSubscriber.SourceChoices.SEARCH_RESULTS,
             "consent_newsletter": consent_newsletter,
             "consent_timestamp": timezone.now() if consent_newsletter else None,
+            "first_search_request": first_search_request,
             "is_active": True,
         },
     )
@@ -48,6 +56,7 @@ def subscribe_email(request):
             "success": True,
             "message": message,
             "subscriber": subscriber,
+            "first_search_request": first_search_request,
         },
     )
 

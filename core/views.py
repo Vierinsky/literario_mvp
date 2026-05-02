@@ -221,10 +221,14 @@ def search_results(request):
     if form.is_valid():
         cleaned_data = form.cleaned_data
         results = _get_filtered_books(cleaned_data)
+        search_request = _persist_search(request, cleaned_data, results)
 
         context["submitted_data"] = cleaned_data
         context["results"] = results
+        context["email_form"] = EmailCaptureForm(
+            initial={"search_request_id": search_request.id}
+        )
 
-        _persist_search(request, cleaned_data, results)
+        # _persist_search(request, cleaned_data, results)
 
     return render(request, "core/search_results.html", context)
