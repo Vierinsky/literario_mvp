@@ -19,6 +19,13 @@ class EmailSubscriber(models.Model):
     )
     consent_newsletter = models.BooleanField(default=False)
     consent_timestamp = models.DateField(null=True, blank=True)
+    first_search_request = models.ForeignKey(
+        "tracking.SearchRequest",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="first_subscriber_links",
+    )
     provider_contact_id = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
