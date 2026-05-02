@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Editorial | Literario MVP{% endblock %}
+
+{% block content %}
+<h1>Editorial</h1>
+<p>Notas y listas curatoriales del proyecto.</p>
+
+{% if posts %}
+    {% for post in posts %}
+        <article>
+            <h2>
+                <a href="{% url 'editorial_detail' slug=post.slug %}">
+                    {{ post.title }}
+                </a>
+            </h2>
+
+            <p><strong>Tipo:</strong> {{ post.get_post_type_display }}</p>
+
+            {% if post.summary %}
+                <p>{{ post.summary }}</p>
+            {% endif %}
+
+            {% if post.published_at %}
+                <p><strong>Publicado:</strong> {{ post.published_at }}</p>
+            {% endif %}
+        </article>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>Todavía no hay piezas editoriales publicadas.</p>
+{% endif %}
+{% endblock %}

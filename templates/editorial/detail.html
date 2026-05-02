@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} | Editorial{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ post.title }}</h1>
+
+    <p><strong>Tipo:</strong> {{ post.get_post_type_display }}</p>
+
+    {% if post.published_at %}
+        <p><strong>Publicado:</strong> {{ post.published_at }}</p>
+    {% endif %}
+
+    {% if post.summary %}
+        <p><em>{{ post.summary }}</em></p>
+    {% endif %}
+
+    <div>
+        {{ post.content|linebreaks }}
+    </div>
+</article>
+
+{% if post.post_books.all %}
+    <section>
+        <h2>Libros relacionados</h2>
+        <ul>
+            {% for relation in post.post_books.all %}
+                <li>
+                    <strong>{{ relation.book.title }}</strong>
+                    — {{ relation.book.author.name }}
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endif %}
+
+<p><a href="{% url 'editorial_index' %}">Volver a editorial</a></p>
+{% endblock %}
