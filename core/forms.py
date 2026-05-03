@@ -14,7 +14,7 @@ class BookSearchForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 4,
-                "placeholder": "Ej: Quiero algo melancólico, extraño y no demasiado denso.",
+                "placeholder": "Ej: magia, melancolía, atmósfera extraña, fantasía íntima...",
             }
         ),
     )

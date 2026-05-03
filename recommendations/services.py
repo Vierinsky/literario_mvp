@@ -1,4 +1,5 @@
 from catalog.models import Book
+from django.db.models import Q
 
 def humanize_value(value):
     """
@@ -97,11 +98,31 @@ def get_filtered_books(cleaned_data):
         .prefetch_related("tags")
     )
 
+    query_text = cleaned_data.get("query_text", "").strip()
     tone = cleaned_data.get("tone")
     pace = cleaned_data.get("pace")
     theme = cleaned_data.get("theme")
     length = cleaned_data.get("length")
     include_english = cleaned_data.get("include_english")
+
+    if query_text:
+        terms = [term.strip() for term in query_text.split() if term.strip()]
+
+        if terms:
+            text_query = Q()
+
+            for term in terms:
+                text_query |= Q(title__icontains=term)
+                text_query |= Q(synopsis__icontains=term)
+                text_query |= Q(author__name__icontains=term)
+                text_query |= Q(tags__tag_value__icontains=term)
+
+                # Ojo:
+                # Esto usa OR entre términos.
+                # Eso significa que si encuentra coincidencia con cualquiera de las palabras, el libro puede entrar.
+                # Para un catálogo chico, eso está bien como primer paso.
+
+            books = books.filter(text_query)
 
     if tone:
         books = books.filter(
