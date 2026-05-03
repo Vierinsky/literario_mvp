@@ -11,12 +11,11 @@ class EditorialPostAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "title",
-        "post_type",
         "is_published",
         "published_at",
         "created_at",
     )
-    list_filter = ("post_type", "is_published", "published_at", "created_at")
+    list_filter = ("is_published", "published_at", "created_at")
     search_fields = ("title", "slug", "summary", "content")
     prepopulated_fields = {"slug": ("title",)}
 

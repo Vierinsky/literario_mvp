@@ -3,21 +3,11 @@ from django.utils import timezone
 
 class EditorialPost(models.Model):
     """
-    Representa una pieza editorial del proyecto, como una lista
-    curatorial o una nota breve.
+    Representa una pieza editorial del proyecto.
     """
-
-    class PostTypeChoices(models.TextChoices):
-        LIST = "list", "Lista"
-        NOTE = "note", "Nota"
 
     title = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, max_length=255)
-    post_type = models.CharField(
-        max_length=20,
-        choices=PostTypeChoices.choices,
-        db_index=True,
-    )
     summary = models.TextField(blank=True)
     content = models.TextField()
     is_published = models.BooleanField(default=False, db_index=True)
@@ -75,3 +65,4 @@ class EditorialPostBook(models.Model):
         Devuelve una representación legible del vínculo.
         """
         return f"{self.editorial_post.title} | #{self.position} | {self.book.title}"
+    
