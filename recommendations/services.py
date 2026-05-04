@@ -1,5 +1,102 @@
+import unicodedata
+
 from catalog.models import Book
+
 from django.db.models import Q
+
+
+def normalize_text(text):
+    """
+    Normaliza un texto para comparación básica:
+    - minúsculas
+    - sin tildes
+    - sin espacios sobrantes
+    """
+    if not text:
+        return ""
+    
+    text = text.strip().lower()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    return text
+
+
+def expand_query_terms(query_text):
+    """
+    Expande términos del usuario hacia equivalencias internas útiles
+    para mejorar la búsqueda textual del MVP.
+
+    Parameters
+    ----------
+    query_text : str
+        Texto libre ingresado por el usuario.
+
+    Returns
+    -------
+    list[str]
+        Lista de términos normalizados y expandidos.
+    """
+    synonym_map = {
+        "melancolico": ["melancholic"],
+        "melancolica": ["melancholic"],
+        "melancolia": ["melancholic"],
+        "extraño": ["strange"],
+        "extraña": ["strange"],
+        "extrano": ["strange"],
+        "extrana": ["strange"],
+        "raro": ["strange"],
+        "rara": ["strange"],
+        "oscuro": ["dark"],
+        "oscura": ["dark"],
+        "inquietante": ["unsettling"],
+        "lento": ["contemplative"],
+        "lenta": ["contemplative"],
+        "contemplativo": ["contemplative"],
+        "contemplativa": ["contemplative"],
+        "agil": ["fast"],
+        "ágil": ["fast"],
+        "rapido": ["fast"],
+        "rápido": ["fast"],
+        "romantasy": ["romantasy"],
+        "cozy": ["cozy"],
+        "distopia": ["dystopia"],
+        "distopía": ["dystopia"],
+        "horror": ["horror"],
+        "épico": ["epic"],
+        "épica": ["epic"],
+        "epico": ["epic"],
+        "epica": ["epic"],
+        "politica": ["political_intrigue"],
+        "política": ["political_intrigue"],
+        "mitologia": ["mythic_reimagining"],
+        "mitología": ["mythic_reimagining"],
+        "reimaginacion": ["mythic_reimagining"],
+        "reimaginación": ["mythic_reimagining"],
+        "alienigena": ["first_contact"],
+        "alienígena": ["first_contact"],
+        "contacto": ["first_contact"],
+        "corto": ["short"],
+        "corta": ["short"],
+        "medio": ["medium"],
+        "media": ["medium"],
+        "largo": ["long"],
+        "larga": ["long"],
+    }
+
+    normalized_query = normalize_text(query_text)
+    raw_terms = [term for term in normalized_query.split() if term]
+
+    expanded_terms = []
+
+    for term in raw_terms:
+        expanded_terms.append(term)
+
+        mapped_terms = synonym_map.get(term, [])
+        expanded_terms.extend(mapped_terms)
+
+    # quitamos duplicados preservando orden
+    unique_terms = list(dict.fromkeys(expanded_terms))
+    return unique_terms
 
 def humanize_value(value):
     """
