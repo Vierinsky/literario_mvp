@@ -203,7 +203,7 @@ def get_filtered_books(cleaned_data):
     include_english = cleaned_data.get("include_english")
 
     if query_text:
-        terms = [term.strip() for term in query_text.split() if term.strip()]
+        terms = expand_query_terms(query_text)
 
         if terms:
             text_query = Q()
