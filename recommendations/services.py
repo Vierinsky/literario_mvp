@@ -1,8 +1,8 @@
 import unicodedata
 
-from catalog.models import Book
-
 from django.db.models import Q
+
+from catalog.models import Book
 
 
 def normalize_text(text):
@@ -40,8 +40,6 @@ def expand_query_terms(query_text):
         "melancolico": ["melancholic"],
         "melancolica": ["melancholic"],
         "melancolia": ["melancholic"],
-        "extraño": ["strange"],
-        "extraña": ["strange"],
         "extrano": ["strange"],
         "extrana": ["strange"],
         "raro": ["strange"],
@@ -54,26 +52,15 @@ def expand_query_terms(query_text):
         "contemplativo": ["contemplative"],
         "contemplativa": ["contemplative"],
         "agil": ["fast"],
-        "ágil": ["fast"],
         "rapido": ["fast"],
-        "rápido": ["fast"],
         "romantasy": ["romantasy"],
         "cozy": ["cozy"],
         "distopia": ["dystopia"],
-        "distopía": ["dystopia"],
         "horror": ["horror"],
-        "épico": ["epic"],
-        "épica": ["epic"],
-        "epico": ["epic"],
-        "epica": ["epic"],
         "politica": ["political_intrigue"],
-        "política": ["political_intrigue"],
         "mitologia": ["mythic_reimagining"],
-        "mitología": ["mythic_reimagining"],
         "reimaginacion": ["mythic_reimagining"],
-        "reimaginación": ["mythic_reimagining"],
         "alienigena": ["first_contact"],
-        "alienígena": ["first_contact"],
         "contacto": ["first_contact"],
         "corto": ["short"],
         "corta": ["short"],
@@ -81,6 +68,10 @@ def expand_query_terms(query_text):
         "media": ["medium"],
         "largo": ["long"],
         "larga": ["long"],
+        "epic": ["epic"],
+        "epico": ["epic"],
+        "epica": ["epic"],
+        "epopeya": ["epic"],
     }
 
     normalized_query = normalize_text(query_text)
@@ -145,10 +136,14 @@ def build_match_explanation(book, cleaned_data):
     """
     fragments = []
 
+    query_text = cleaned_data.get("query_text")
     tone = cleaned_data.get("tone")
     pace = cleaned_data.get("pace")
     theme = cleaned_data.get("theme")
     length = cleaned_data.get("length")
+
+    if query_text:
+        fragments.append("lo que escribiste en tu búsqueda")
 
     if tone:
         fragments.append(f"un tono {humanize_value(tone)}")
@@ -172,6 +167,83 @@ def build_match_explanation(book, cleaned_data):
         return f"Te lo recomendé porque encaja con {joined}."
 
     return "Te lo recomendé porque encaja razonablemente con los filtros seleccionados."
+
+
+def get_book_tag_map(book):
+    """
+    Retorna un diccionario simple con los tags del libro agrupados por tipo.
+    """
+    tag_map = {
+        "tone_primary": [],
+        "tone_secondary": [],
+        "pace": [],
+        "theme": [],
+    }
+
+    for tag in book.tags.all():
+        if tag.tag_type in tag_map:
+            tag_map[tag.tag_type].append(tag.tag_value)
+
+    return tag_map
+
+
+def score_book(book, cleaned_data, expanded_terms):
+    """
+    Calcula un puntaje simple de relevancia para un libro.
+
+    Reglas iniciales:
+    - coincidencia textual en título: +3
+    - coincidencia textual en autor: +2
+    - coincidencia textual en sinopsis: +1 por término
+    - coincidencia textual en tags: +2 por término
+    - coincidencia con tone: +3
+    - coincidencia con pace: +2
+    - coincidencia con theme: +3
+    - coincidencia con length: +2
+    """
+    score = 0
+
+    title_text = normalize_text(book.title)
+    author_text = normalize_text(book.author.name)
+    synopsis_text = normalize_text(book.synopsis or "")
+    tag_map = get_book_tag_map(book)
+    all_tag_values = []
+    for values in tag_map.values():
+        all_tag_values.extend(values)
+
+    normalized_tag_values = [normalize_text(value) for value in all_tag_values]
+
+    for term in expanded_terms:
+        if term in title_text:
+            score += 3
+
+        if term in author_text:
+            score += 2
+
+        if term in synopsis_text:
+            score += 1
+
+        if any(term in tag_value for tag_value in normalized_tag_values):
+            score += 2
+
+    tone = cleaned_data.get("tone")
+    pace = cleaned_data.get("pace")
+    theme = cleaned_data.get("theme")
+    length = cleaned_data.get("length")
+
+    if tone and (tone in tag_map["tone_primary"] or tone in tag_map["tone_secondary"]):
+        score += 3
+
+    if pace and pace in tag_map["pace"]:
+        score += 2
+
+    if theme and theme in tag_map["theme"]:
+        score += 3
+
+    if length and book.length_category == length:
+        score += 2
+
+    return score
 
 
 def get_filtered_books(cleaned_data):
@@ -202,13 +274,14 @@ def get_filtered_books(cleaned_data):
     length = cleaned_data.get("length")
     include_english = cleaned_data.get("include_english")
 
+    expanded_terms = []
     if query_text:
-        terms = expand_query_terms(query_text)
+        expanded_terms = expand_query_terms(query_text)
 
-        if terms:
+        if expanded_terms:
             text_query = Q()
 
-            for term in terms:
+            for term in expanded_terms:
                 text_query |= Q(title__icontains=term)
                 text_query |= Q(synopsis__icontains=term)
                 text_query |= Q(author__name__icontains=term)
@@ -245,15 +318,20 @@ def get_filtered_books(cleaned_data):
     if not include_english:
         books = books.filter(available_in_spanish=True)
 
-    books = books.distinct().order_by("title")[:3]
+    books = books.distinct()
 
-    enriched_results = []
+    scored_results = []
     for book in books:
-        enriched_results.append(
+        score = score_book(book, cleaned_data, expanded_terms)
+        scored_results.append(
             {
                 "book": book,
+                "score": score,
                 "match_explanation": build_match_explanation(book, cleaned_data),
             }
         )
+    
+    scored_results.sort(key=lambda item: (-item["score"], item["book"].title))
+    
 
-    return enriched_results
+    return scored_results[:3]

@@ -26,6 +26,7 @@
                 <h3>{{ result.book.title }}</h3>
                 <p><strong>Autor:</strong> {{ result.book.author.name }}</p>
                 <p><strong>Género:</strong> {{ result.book.get_genre_main_display }}</p>
+                <p><strong>Score:</strong> {{ result.score }}</p>
 
                 {% if result.book.length_category %}
                 <p><strong>Longitud:</strong> {{ result.book.get_length_category_display }}</p>
