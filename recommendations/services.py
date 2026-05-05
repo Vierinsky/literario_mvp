@@ -56,7 +56,7 @@ def expand_query_terms(query_text):
         "romantasy": ["romantasy"],
         "cozy": ["cozy"],
         "distopia": ["dystopia"],
-        "horror": ["horror"],
+        "terror": ["horror"],
         "politica": ["political_intrigue"],
         "mitologia": ["mythic_reimagining"],
         "reimaginacion": ["mythic_reimagining"],
