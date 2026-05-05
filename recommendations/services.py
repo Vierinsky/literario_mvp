@@ -195,10 +195,10 @@ def score_book(book, cleaned_data, expanded_terms):
     - coincidencia textual en título: +3
     - coincidencia textual en autor: +2
     - coincidencia textual en sinopsis: +1 por término
-    - coincidencia textual en tags: +2 por término
-    - coincidencia con tone: +3
-    - coincidencia con pace: +2
-    - coincidencia con theme: +3
+    - coincidencia textual en tags: +3 por término
+    - coincidencia con tone: +4
+    - coincidencia con pace: +3
+    - coincidencia con theme: +4
     - coincidencia con length: +2
     """
     score = 0
@@ -224,7 +224,7 @@ def score_book(book, cleaned_data, expanded_terms):
             score += 1
 
         if any(term in tag_value for tag_value in normalized_tag_values):
-            score += 2
+            score += 3
 
     tone = cleaned_data.get("tone")
     pace = cleaned_data.get("pace")
@@ -232,13 +232,13 @@ def score_book(book, cleaned_data, expanded_terms):
     length = cleaned_data.get("length")
 
     if tone and (tone in tag_map["tone_primary"] or tone in tag_map["tone_secondary"]):
-        score += 3
+        score += 4
 
     if pace and pace in tag_map["pace"]:
-        score += 2
+        score += 3
 
     if theme and theme in tag_map["theme"]:
-        score += 3
+        score += 4
 
     if length and book.length_category == length:
         score += 2
