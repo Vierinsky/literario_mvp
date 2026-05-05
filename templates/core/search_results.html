@@ -3,66 +3,79 @@
 {% block title %}Resultados | Literario MVP{% endblock %}
 
 {% block content %}
-<h1>Resultados de búsqueda</h1>
+<section class="panel">
+    <h1>Resultados</h1>
 
-{% if submitted_data %}
-    <p>Búsqueda procesada con filtros básicos del catálogo.</p>
+    {% if submitted_data %}
+        <p class="lead">
+            Revisé tu búsqueda y te dejo una primera selección de libros que podrían encajar.
+        </p>
 
-    <h2>Tu búsqueda</h2>
-    <ul>
-        <li><strong>Texto libre:</strong> {{ submitted_data.query_text|default:"(vacío)" }}</li>
-        <li><strong>Tono:</strong> {{ submitted_data.tone|default:"(sin filtro)" }}</li>
-        <li><strong>Ritmo:</strong> {{ submitted_data.pace|default:"(sin filtro)" }}</li>
-        <li><strong>Longitud:</strong> {{ submitted_data.length|default:"(sin filtro)" }}</li>
-        <li><strong>Temática:</strong> {{ submitted_data.theme|default:"(sin filtro)" }}</li>
-        <li><strong>Incluir inglés:</strong> {{ submitted_data.include_english|yesno:"Sí,No" }}</li>
-    </ul>
+        <div class="search-summary">
+            <h2>Tu búsqueda</h2>
+            <ul>
+                <li><strong>Texto libre:</strong> {{ submitted_data.query_text|default:"(vacío)" }}</li>
+                <li><strong>Tono:</strong> {{ submitted_data.tone|default:"(sin filtro)" }}</li>
+                <li><strong>Ritmo:</strong> {{ submitted_data.pace|default:"(sin filtro)" }}</li>
+                <li><strong>Longitud:</strong> {{ submitted_data.length|default:"(sin filtro)" }}</li>
+                <li><strong>Temática:</strong> {{ submitted_data.theme|default:"(sin filtro)" }}</li>
+                <li><strong>Incluir inglés:</strong> {{ submitted_data.include_english|yesno:"Sí,No" }}</li>
+            </ul>
+        </div>
 
-    <h2>Recomendaciones</h2>
+        <h2>Recomendaciones</h2>
 
-    {% if results %}
-        {% for result in results %}
-            <article>
-                <h3>{{ result.book.title }}</h3>
-                <p><strong>Autor:</strong> {{ result.book.author.name }}</p>
-                <p><strong>Género:</strong> {{ result.book.get_genre_main_display }}</p>
-                <p><strong>Score:</strong> {{ result.score }}</p>
+        {% if results %}
+            <div class="results-grid">
+                {% for result in results %}
+                    <article class="card">
+                        <h3>{{ result.book.title }}</h3>
+                        <p><strong>Autor:</strong> {{ result.book.author.name }}</p>
+                        <p><strong>Género:</strong> {{ result.book.get_genre_main_display }}</p>
 
-                {% if result.book.length_category %}
-                <p><strong>Longitud:</strong> {{ result.book.get_length_category_display }}</p>
-                {% endif %}
-                
-                {% if result.book.page_count %}
-                    <p><strong>Páginas:</strong> {{ result.book.page_count }}</p>
-                {% endif %}
+                        {% if result.book.length_category %}
+                            <p><strong>Longitud:</strong> {{ result.book.get_length_category_display }}</p>
+                        {% endif %}
 
-                {% if result.book.synopsis %}
-                    <p>{{ result.book.synopsis }}</p>
-                {% endif %}
+                        {% if result.book.page_count %}
+                            <p><strong>Páginas:</strong> {{ result.book.page_count }}</p>
+                        {% endif %}
 
-                <p><strong>Por qué te lo recomiendo:</strong> {{ result.match_explanation }}</p>                               
-            </article>
-            <hr>
-        {% endfor %}
+                        {% if result.book.synopsis %}
+                            <p>{{ result.book.synopsis }}</p>
+                        {% endif %}
+
+                        <p class="match-copy">
+                            <strong>Por qué podría encajar:</strong>
+                            {{ result.match_explanation }}
+                        </p>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <section class="panel subtle-panel">
+                <h2>¿Quieres más recomendaciones?</h2>
+                <p class="section-intro">
+                    Puedes dejar tu correo y usaré esa base más adelante para conectarlo con una secuencia
+                    de bienvenida y recomendaciones extra.
+                </p>
+
+                <form method="post" action="{% url 'subscribe_email' %}" class="stack-form">
+                    {% csrf_token %}
+                    {{ email_form.as_p }}
+                    <button type="submit">Quiero recibir recomendaciones extra</button>
+                </form>
+            </section>
+        {% else %}
+            <p>
+                No encontré resultados suficientemente claros con esa búsqueda. Prueba con otra combinación
+                de palabras o ajusta los filtros.
+            </p>
+        {% endif %}
     {% else %}
-        <p>No encontré libros que coincidan con esos filtros todavía.</p>
+        <p>No se recibió una búsqueda válida.</p>
     {% endif %}
-{% else %}
-    <p>No se recibió una búsqueda válida.</p>
-{% endif %}
 
-{% if results %}
-    <section>
-        <h2>¿Quieres más recomendaciones?</h2>
-        <p>Déjame tu correo y más adelante esta parte se conectará con la secuencia de bienvenida del proyecto.</p>
-
-        <form method="post" action="{% url 'subscribe_email' %}">
-            {% csrf_token %}
-            {{ email_form.as_p }}
-            <button type="submit">Quiero recibir recomendaciones extra</button>
-        </form>
-    </section>
-{% endif %}
-
-<p><a href="{% url 'home' %}">Volver a la home</a></p>
+    <p><a href="{% url 'home' %}">Volver al buscador</a></p>
+</section>
 {% endblock %}

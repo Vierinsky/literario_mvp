@@ -1,13 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Home | Literario MVP{% endblock %}
+{% block title %}Encuentra tu próxima lectura | Literario MVP{% endblock %}
 
 {% block content %}
-<h1>Encuentra tu próxima lectura</h1>
-<p>Describe qué te gustaría leer y afina la búsqueda con filtros opcionales.</p>
+<section class="hero">
+    <p class="eyebrow">Recomendador literario en construcción</p>
+    <h1>Encuentra tu próxima lectura de fantasía o ciencia ficción</h1>
+    <p class="lead">
+        Describe qué te gustaría leer y afina la búsqueda con algunos filtros.
+        La idea es recomendar libros según el tono, el ritmo y la experiencia que buscas,
+        no solo por género o fama.
+    </p>
+</section>
 
-<form method="get" action="{% url 'search_results' %}">
-    {{form.as_p}}
-    <button type="submit">Buscar recomendaciones</button>
-</form>
+<section class="panel">
+    <h2>¿Qué te gustaría leer?</h2>
+    <p class="section-intro">
+        Puedes escribir algo breve como “quiero una fantasía melancólica y contemplativa”
+        o apoyarte más en los filtros.
+    </p>
+
+    <form method="get" action="{% url 'search_results' %}" class="stack-form">
+        {{ form.as_p }}
+        <button type="submit">Buscar recomendaciones</button>
+    </form>
+</section>
 {% endblock %}

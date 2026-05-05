@@ -3,22 +3,24 @@
 {% block title %}Suscripción | Literario MVP{% endblock %}
 
 {% block content %}
-<h1>Suscripción</h1>
+<section class="panel">
+    <h1>Suscripción</h1>
 
-{% if success %}
-    <p>{{ message }}</p>
+    {% if success %}
+        <p class="lead">{{ message }}</p>
 
-    {% if subscriber %}
-        <p><strong>Email:</strong> {{ subscriber.email }}</p>
-        <p><strong>Fuente:</strong> {{ subscriber.get_source_display }}</p>
+        {% if subscriber %}
+            <p><strong>Email:</strong> {{ subscriber.email }}</p>
+            <p><strong>Fuente:</strong> {{ subscriber.get_source_display }}</p>
+        {% endif %}
+
+        {% if first_search_request %}
+            <p><strong>Búsqueda asociada:</strong> #{{ first_search_request.id }}</p>
+        {% endif %}
+    {% else %}
+        <p>{{ message }}</p>
     {% endif %}
 
-    {% if first_search_request %}
-        <p><strong>Búsqueda asociada:</strong> #{{ first_search_request.id }}</p>
-    {% endif %}
-{% else %}
-    <p>{{ message }}</p>
-{% endif %}
-
-<p><a href="{% url 'home' %}">Volver a la home</a></p>
+    <p><a href="{% url 'home' %}">Volver al inicio</a></p>
+</section>
 {% endblock %}
