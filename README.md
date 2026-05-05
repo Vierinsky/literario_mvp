@@ -45,3 +45,95 @@ El proyecto ya incluye:
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
+```
+### Dependencias
+
+```
+pip install -r requirements.txt
+```
+
+### Migraciones
+
+```
+python manage.py makemigrations
+python manage.py migrate
+```
+### Superusuario
+
+```
+python manage.py createsuperuser
+```
+
+### Runserver
+
+```
+python manage.py runserver
+```
+## Seed manual actual
+
+Existe un script inicial de carga en:
+```
+scripts/load_seed_books.py
+```
+
+Puede ejecutarse desde Django shell con:
+```
+exec(open("scripts/load_seed_books.py", encoding="utf-8").read())
+```
+
+## Estado del recomendador
+
+Actualmente el sistema usa:
+- filtros explícitos (tone, pace, theme, length)
+- búsqueda textual básica sobre título, sinopsis, autor y tags
+- normalización simple de términos
+- score heurístico para ordenar resultados
+
+Todavía no usa embeddings.
+
+## Pendientes principales
+
+- formalizar seed como management command
+- mejorar ranking y relevancia
+- preparar embedding_text
+- integrar proveedor externo de email/newsletter
+- expandir catálogo
+- mejorar UI/copy
+
+## Roadmap de IA
+
+Este proyecto no busca quedarse en una búsqueda textual con filtros.
+La idea es usar esta base web y de datos como plataforma para aprender AI Engineering aplicado a recomendación literaria.
+
+Capas previstas:
+
+1. búsqueda híbrida inicial
+   - filtros explícitos
+   - normalización de texto
+   - ranking heurístico
+
+2. capa semántica
+   - construcción de `embedding_text`
+   - generación de embeddings del catálogo
+   - similitud semántica entre búsqueda y libros
+
+3. ranking más avanzado
+   - mezcla de score semántico + metadata curada + filtros
+   - mejores explicaciones
+   - ajustes a partir de comportamiento real
+
+## Deuda técnica sana
+
+### Actual
+
+- SQLite en vez de PostgreSQL
+- seed ejecutada vía script y no management command
+- ranking heurístico todavía simple
+- `query_text` sin embeddings
+- UI todavía básica
+- falta integración real con proveedor de email
+- falta tests automáticos
+
+### Notas
+
+Esto no bloquea el MVP actual, pero conviene tenerlo visible para iterar con orden.
