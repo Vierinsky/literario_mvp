@@ -1,4 +1,5 @@
-from catalog.models import BookTag
+from catalog.models import Book, BookTag
+from django.utils import timezone
 
 def humanize_genre(value):
     '''
@@ -148,8 +149,14 @@ def update_book_embedding_text(book):
     Book
         Libro actualizado.
     """
-    book.embedding_text = build_embedding_text(book)
-    book.save(update_fields=["embedding_text", "updated_at"])
+    embedding_text = build_embedding_text(book)
+
+    Book.objects.filter(pk=book.pk).update(
+        embedding_text=embedding_text,
+        updated_at=timezone.now()
+    )
+
+    book.refresh_from_db()
     return book
 
 def rebuild_all_embedding_texts():
@@ -161,8 +168,6 @@ def rebuild_all_embedding_texts():
     int
         Cantidad de libros actualizados.
     """
-    from catalog.models import Book
-
     books = Book.objects.select_related("author").prefetch_related("tags").all()
 
     count = 0
