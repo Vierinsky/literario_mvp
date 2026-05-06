@@ -55,6 +55,7 @@ class Book(models.Model):
     original_language = models.CharField(max_length=255, blank=True)
     isbn = models.CharField(max_length=32, blank=True, db_index=True)
     cover_url = models.URLField(blank=True)
+    embedding_text = models.TextField(blank=True)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     upgraded_at = models.DateTimeField(auto_now=True)
