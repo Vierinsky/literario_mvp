@@ -58,7 +58,7 @@ class Book(models.Model):
     embedding_text = models.TextField(blank=True)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    upgraded_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def calculate_length_category(self):
         '''
