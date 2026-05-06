@@ -153,7 +153,7 @@ def update_book_embedding_text(book):
 
     Book.objects.filter(pk=book.pk).update(
         embedding_text=embedding_text,
-        updated_at=timezone.now()
+        upgraded_at=timezone.now()
     )
 
     book.refresh_from_db()
