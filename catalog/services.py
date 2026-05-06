@@ -133,3 +133,41 @@ def build_embedding_text(book):
     )
 
     return "\n".join(lines)
+
+def update_book_embedding_text(book):
+    """
+    Construye y guarda el embedding_text de un libro.
+
+    Parameters
+    ----------
+    book : Book
+        Libro del catálogo.
+
+    Returns
+    -------
+    Book
+        Libro actualizado.
+    """
+    book.embedding_text = build_embedding_text(book)
+    book.save(update_fields=["embedding_text", "updated_at"])
+    return book
+
+def rebuild_all_embedding_texts():
+    """
+    Regenera el embedding_text de todos los libros del catálogo.
+
+    Returns
+    -------
+    int
+        Cantidad de libros actualizados.
+    """
+    from catalog.models import Book
+
+    books = Book.objects.select_related("author").prefetch_related("tags").all()
+
+    count = 0
+    for book in books:
+        update_book_embedding_text(book)
+        count += 1
+
+    return count
