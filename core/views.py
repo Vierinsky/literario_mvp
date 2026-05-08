@@ -39,7 +39,7 @@ def search_results(request):
         "form": form,
         "submitted_data": None,
         "results": [],
-        "email_form": EmailCaptureForm,
+        "email_form": EmailCaptureForm(),
     }
 
     if form.is_valid():

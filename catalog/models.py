@@ -200,6 +200,22 @@ class Book(models.Model):
             self.length_category,
         ])
 
+        has_valid_status = (
+            self.catalog_status == self.CatalogStatusChoices.ACTIVE
+        )
+
+        has_usable_metadata = self.metadata_status in [
+            self.MetadataStatusChoices.PARTIAL,
+            self.MetadataStatusChoices.VALIDATED,
+        ]
+
+        return all([
+            self.is_active,
+            has_basic_metadata,
+            has_valid_status,
+            has_usable_metadata,
+        ])
+
 
     def save(self, *args, **kwargs):
         '''

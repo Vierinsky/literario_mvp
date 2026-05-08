@@ -245,11 +245,45 @@ def score_book(book, cleaned_data, expanded_terms):
 
     return score
 
+def get_recommendable_books_queryset():
+    """
+    Retorna el queryset base de libros aptos para recomendación.
+
+    Un libro se considera apto si:
+    - está activo;
+    - fue aprobado para el catálogo;
+    - tiene metadata parcial o validada.
+
+    Returns
+    -------
+    QuerySet[Book]
+        QuerySet optimizado con author y tags precargados.
+    """
+    return (
+        Book.objects.filter(
+            is_active=True,
+            catalog_status=Book.CatalogStatusChoices.ACTIVE,
+            metadata_status__in=[
+                Book.MetadataStatusChoices.PARTIAL,
+                Book.MetadataStatusChoices.VALIDATED,
+            ],
+        )
+        .select_related("author")
+        .prefetch_related("tags")
+    )
 
 def get_filtered_books(cleaned_data):
     """
-    Retorna hasta 3 libros activos filtrados por tags curatoriales básicos
-    y los enriquece con una explicación de match.
+    Retorna hasta 3 libros aptos para recomendación, filtrados por texto,
+    tags curatoriales básicos y disponibilidad de idioma.
+
+    Un libro se considera apto para recomendación si:
+    - está marcado como is_active=True;
+    - tiene catalog_status='active';
+    - tiene metadata_status='partial' o 'validated'.
+
+    Esto evita que libros importados como candidatos o pendientes de revisión
+    aparezcan en el recomendador antes de pasar por curaduría mínima.
 
     Parameters
     ----------
@@ -259,13 +293,9 @@ def get_filtered_books(cleaned_data):
     Returns
     -------
     list[dict]
-        Lista de resultados enriquecidos.
+        Lista de resultados enriquecidos con libro, score y explicación.
     """
-    books = (
-        Book.objects.filter(is_active=True)
-        .select_related("author")
-        .prefetch_related("tags")
-    )
+    books = get_recommendable_books_queryset()
 
     query_text = cleaned_data.get("query_text", "").strip()
     tone = cleaned_data.get("tone")
@@ -275,6 +305,7 @@ def get_filtered_books(cleaned_data):
     include_english = cleaned_data.get("include_english")
 
     expanded_terms = []
+
     if query_text:
         expanded_terms = expand_query_terms(query_text)
 
@@ -289,8 +320,9 @@ def get_filtered_books(cleaned_data):
 
                 # Ojo:
                 # Esto usa OR entre términos.
-                # Eso significa que si encuentra coincidencia con cualquiera de las palabras, el libro puede entrar.
-                # Para un catálogo chico, eso está bien como primer paso.
+                # Si encuentra coincidencia con cualquiera de las palabras,
+                # el libro puede entrar como candidato textual.
+                # Para un catálogo chico, esto está bien como primer paso.
 
             books = books.filter(text_query)
 
@@ -321,8 +353,10 @@ def get_filtered_books(cleaned_data):
     books = books.distinct()
 
     scored_results = []
+
     for book in books:
         score = score_book(book, cleaned_data, expanded_terms)
+        
         scored_results.append(
             {
                 "book": book,
