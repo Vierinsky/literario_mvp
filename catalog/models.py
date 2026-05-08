@@ -20,16 +20,59 @@ class Author(models.Model):
 class Book(models.Model):
     '''
     Representa un libro dentro del catálogo del proyecto.
+
+    Este modelo guarda tanto metadata bibliográfica básica como campos
+    operativos necesarios para decidir si un libro puede usarse en
+    recomendaciones y, más adelante, en procesos de embeddings.
     '''
 
     class GenreChoices(models.TextChoices):
+        '''
+        Géneros principales soportados por el MVP.
+        '''
         FANTASY = "fantasy", "Fantasía"
         SCIENCE_FICTION = "science_fiction", "Ciencia ficción"
 
     class LengthCategoryChoices(models.TextChoices):
+        '''
+        Categorías simples de longitud derivadas desde page_count.
+        '''
         SHORT = "short", "Corto"
         MEDIUM = "medium", "Medio"
         LONG = "long", "Largo"
+
+    class CatalogStatusChoices(models.TextChoices):
+        '''
+        Estado operativo/editorial del libro dentro del catálogo.
+
+        candidate:
+            Libro detectado o cargado inicialmente, pero todavía incompleto.
+
+        needs_review:
+            Libro con metadata básica suficiente, pero pendiente de revisión humana.
+
+        active:
+            Libro aprobado para aparecer en recomendaciones.
+
+        inactive:
+            Libro válido, pero temporalmente excluido del recomendador.
+
+        rejected:
+            Libro descartado por duplicado, mala metadata o falta de encaje.
+        '''
+        CANDIDATE = "candidate", "Candidato"
+        NEEDS_REVIEW = "needs_review", "Necesita revisión"
+        ACTIVE = "active", "Activo"
+        INACTIVE = "inactive", "Inactivo"
+        REJECTED = "rejected", "Rechazado"
+
+    class MetadataStatusChoices(models.TextChoices):
+        '''
+        Estado de calidad de la metadata bibliográfica y curatorial.
+        '''
+        PENDING = "pending", "Pendiente"
+        PARTIAL= "partial", "Parcial"
+        VALIDATED = "validated", "Validada"
     
     title = models.CharField(max_length=255, db_index=True)
     author = models.ForeignKey(
@@ -55,10 +98,64 @@ class Book(models.Model):
     original_language = models.CharField(max_length=255, blank=True)
     isbn = models.CharField(max_length=32, blank=True, db_index=True)
     cover_url = models.URLField(blank=True)
+    
+    publication_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+
+    # Identificadores externos para poder cruzar y actualizar metadata
+    # sin depender solamente de título + autor.
+    external_openlibrary_id = models.CharField(
+        max_length=100,
+        blank=True,
+        db_index=True,
+    )
+
+    external_google_books_id = models.CharField(
+        max_length=100,
+        blank=True,
+        db_index=True,
+    )
+
+    external_wikidata_id = models.CharField(
+        max_length=100,
+        blank=True,
+        db_index=True,
+    )
+
+    # Estado operativo/editorial del libro.
+    catalog_status = models.CharField(
+        max_length=20,
+        choices=CatalogStatusChoices.choices,
+        default=CatalogStatusChoices.CANDIDATE,
+        db_index=True,
+    )
+    
+    # Estado de calidad de metadata.
+    metadata_status = models.CharField(
+        max_length=20,
+        choices=MetadataStatusChoices.choices,
+        default=MetadataStatusChoices.PENDING,
+        db_index=True,
+    )
+
+    # Fecha de última actualización/enriquecimiento desde fuentes externas.
+    last_enriched_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    
     embedding_text = models.TextField(blank=True)
+
+    # Interruptor simple para excluir libros del sitio/recomendador.
+    # Por ahora se mantiene junto a catalog_status para no romper lógica existente.
     is_active = models.BooleanField(default=True, db_index=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     def calculate_length_category(self):
         '''
@@ -81,6 +178,29 @@ class Book(models.Model):
         
         return self.LengthCategoryChoices.LONG
     
+    
+    def is_ready_for_recommendations(self):
+        '''
+        Indica si el libro cumple condiciones mínimas para ser recomendado.
+
+        Esta validación no reemplaza validaciones más completas del catálogo,
+        pero sirve como regla rápida dentro del modelo.
+
+        Returns
+        -------
+        bool
+            True si el libro puede participar en recomendaciones.
+            False en caso contrario.
+        '''
+        has_basic_metadata = all([
+            self.title,
+            self.author_id,
+            self.synopsis,
+            self.genre_main,
+            self.length_category,
+        ])
+
+
     def save(self, *args, **kwargs):
         '''
         Recalcula la categoría de longitud antes de guardar.
