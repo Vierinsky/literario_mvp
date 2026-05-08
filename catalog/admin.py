@@ -128,6 +128,61 @@ class BookAdmin(admin.ModelAdmin):
             },
         ),
     )
+    actions = (
+        "mark_as_active_partial",
+        "mark_as_needs_review",
+        "mark_as_inactive",
+    )
+
+    @admin.action(description="Marcar como activo con metadata parcial")
+    def mark_as_active_partial(self, request, queryset):
+        '''
+        Marca libros seleccionados como activos y con metadata parcial.
+
+        Esta acción es útil para aprobar libros que ya están suficientemente
+        curados para participar en recomendaciones, aunque todavía no tengan
+        validación completa.
+        '''
+        updated_count = queryset.update(
+            catalog_status=Book.CatalogStatusChoices.ACTIVE,
+            metadata_status=Book.MetadataStatusChoices.PARTIAL,
+            is_active=True,
+        )
+
+        self.message_user(
+            request,
+            f"{updated_count} libro(s) marcado(s) como activos con metadata parcial.",
+        )
+
+    @admin.action(description="Marcar como necesita revisión")
+    def mark_as_needs_review(self, request, queryset):
+        '''
+        Marca libros seleccionados como pendientes de revisión humana.
+        '''
+        updated_count = queryset.update(
+            catalog_status=Book.CatalogStatusChoices.NEEDS_REVIEW,
+            metadata_status=Book.MetadataStatusChoices.PARTIAL,
+        )
+
+        self.message_user(
+            request,
+            f"{updated_count} libro(s) marcado(s) como necesita revisión.",
+        )
+
+    @admin.action(description="Marcar como inactivo")
+    def mark_as_inactive(self, request, queryset):
+        '''
+        Desactiva libros seleccionados para que no participen en recomendaciones.
+        '''
+        updated_count = queryset.update(
+            catalog_status=Book.CatalogStatusChoices.INACTIVE,
+            is_active=False,
+        )
+
+        self.message_user(
+            request,
+            f"{updated_count} libro(s) marcado(s) como inactivos.",
+        )
 
 @admin.register(BookTag)
 class BookTagAdmin(admin.ModelAdmin):
