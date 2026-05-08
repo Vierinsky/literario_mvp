@@ -16,6 +16,10 @@ class AuthorAdmin(admin.ModelAdmin):
 class BookAdmin(admin.ModelAdmin):
     '''
     Configuración del admin para libros.
+
+    El objetivo de esta vista es facilitar la revisión operativa del
+    catálogo: estado del libro, calidad de metadata, disponibilidad,
+    fuentes externas y preparación futura para embeddings.
     '''
 
     list_display = (
@@ -23,12 +27,107 @@ class BookAdmin(admin.ModelAdmin):
         "title",
         "author",
         "genre_main",
+        "catalog_status",
+        "metadata_status",
         "length_category",
         "available_in_spanish",
         "is_active",
+        "updated_at",
     )
-    list_filter = ("genre_main", "length_category", "available_in_spanish", "is_active")
-    search_fields = ("title", "author__name", "isbn")
+    list_filter = (
+        "genre_main",
+        "catalog_status",
+        "metadata_status",
+        "length_category",
+        "available_in_spanish",
+        "is_active"
+        )
+    search_fields = (
+        "title", 
+        "author__name", 
+        "isbn",
+        "external_openlibrary_id",
+        "external_google_books_id",
+        "external_wikidata_id",
+        )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "last_enriched_at",
+    )
+    fieldsets = (
+        (
+            "Información básica",
+            {
+                "fields": (
+                    "title",
+                    "author",
+                    "synopsis",
+                    "genre_main",
+                    "page_count",
+                    "length_category",
+                )
+            },
+        ),
+        (
+            "Disponibilidad e idioma",
+            {
+                "fields": (
+                    "available_in_spanish",
+                    "spanish_title",
+                    "original_language",
+                )
+            },
+        ),
+        (
+            "Metadata bibliográfica",
+            {
+                "fields": (
+                    "isbn",
+                    "publication_year",
+                    "cover_url",
+                )
+            },
+        ),
+        (
+            "Estado operativo del catálogo",
+            {
+                "fields": (
+                    "catalog_status",
+                    "metadata_status",
+                    "is_active",
+                )
+            },
+        ),
+        (
+            "Identificadores externos",
+            {
+                "fields": (
+                    "external_openlibrary_id",
+                    "external_google_books_id",
+                    "external_wikidata_id",
+                    "last_enriched_at",
+                )
+            },
+        ),
+        (
+            "Preparación semántica",
+            {
+                "fields": (
+                    "embedding_text",
+                )
+            },
+        ),
+        (
+            "Fechas internas",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                )
+            },
+        ),
+    )
 
 @admin.register(BookTag)
 class BookTagAdmin(admin.ModelAdmin):
