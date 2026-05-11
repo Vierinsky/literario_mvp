@@ -2,7 +2,7 @@ import unicodedata
 
 from django.db.models import Q
 
-from catalog.models import Book
+from catalog.services import get_recommendable_books_queryset
 
 
 def normalize_text(text):
@@ -244,33 +244,6 @@ def score_book(book, cleaned_data, expanded_terms):
         score += 2
 
     return score
-
-def get_recommendable_books_queryset():
-    """
-    Retorna el queryset base de libros aptos para recomendación.
-
-    Un libro se considera apto si:
-    - está activo;
-    - fue aprobado para el catálogo;
-    - tiene metadata parcial o validada.
-
-    Returns
-    -------
-    QuerySet[Book]
-        QuerySet optimizado con author y tags precargados.
-    """
-    return (
-        Book.objects.filter(
-            is_active=True,
-            catalog_status=Book.CatalogStatusChoices.ACTIVE,
-            metadata_status__in=[
-                Book.MetadataStatusChoices.PARTIAL,
-                Book.MetadataStatusChoices.VALIDATED,
-            ],
-        )
-        .select_related("author")
-        .prefetch_related("tags")
-    )
 
 def get_filtered_books(cleaned_data):
     """
