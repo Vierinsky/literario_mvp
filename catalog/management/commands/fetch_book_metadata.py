@@ -85,6 +85,9 @@ class Command(BaseCommand):
 
         for index, candidate in enumerate(candidates, start=1):
             self.stdout.write(f"[{index}] {candidate['title']}")
+            self.stdout.write(
+                f"    Match score: {candidate.get('match_score', 0)}"
+            )
             self.stdout.write(f"    Autor: {candidate['author_name']}")
             self.stdout.write(
                 f"    Año: {candidate['publication_year'] or 'sin dato'}"
@@ -99,6 +102,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"    Cover: {candidate['cover_url'] or 'sin dato'}"
             )
+            
 
             subjects = candidate.get("subjects", [])
 
