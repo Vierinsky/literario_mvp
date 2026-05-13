@@ -1,4 +1,5 @@
 import requests
+import unicodedata
 
 OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 
@@ -30,13 +31,9 @@ def search_openlibrary_book(title, author=None, limit=5):
     requests.HTTPError
         Si la API responde con un error HTTP.
     """
-    query_parts = [title]
-
-    if author:
-        query_parts.append(author)
-
-        params = {
-        "q": " ".join(query_parts),
+    
+    params = {
+        "title": title,
         "limit": limit,
         "fields": ",".join([
             "key",
@@ -51,16 +48,125 @@ def search_openlibrary_book(title, author=None, limit=5):
             "subject",
         ]),
         }
-
-        response = requests.get(
-            OPEN_LIBRARY_SEARCH_URL,
-            params=params,
-            timeout=15,
-        )
-        
-        response.raise_for_status()
-        return response.json()
     
+    if author:
+        params["author"] = author
+
+    response = requests.get(
+        OPEN_LIBRARY_SEARCH_URL,
+        params=params,
+        timeout=15,
+    )
+    
+    response.raise_for_status()
+    return response.json()
+    
+
+def normalize_text_for_matching(text):
+    """
+    Normaliza texto para comparar títulos y autores.
+
+    La normalización elimina tildes, pasa a minúsculas y limpia espacios.
+    Esto ayuda a comparar entradas como 'El Hobbit', 'Hobbit' o nombres
+    de autores con variaciones menores.
+
+    Parameters
+    ----------
+    text : str
+        Texto a normalizar.
+
+    Returns
+    -------
+    str
+        Texto normalizado.
+    """
+    if not text:
+        return ""
+    
+    text = text.strip().lower()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(
+        char for char in text
+        if not unicodedata.combining(char)
+    )
+
+    return " ".join(text.split())
+
+
+def score_openlibrary_candidate(candidate, expected_title, expected_author=None):
+    """
+    Calcula un score simple para ordenar candidatos de Open Library.
+
+    Este score no decide todavía qué importar. Solo ayuda a mostrar primero
+    los candidatos más probables.
+
+    Parameters
+    ----------
+    candidate : dict
+        Candidato normalizado desde Open Library.
+
+    expected_title : str
+        Título buscado originalmente.
+
+    expected_author : str, optional
+        Autor esperado.
+
+    Returns
+    -------
+    int
+        Puntaje de coincidencia. A mayor puntaje, mejor candidato.
+    """
+    score = 0
+
+    candidate_title = normalize_text_for_matching(candidate.get("title", ""))
+    expected_title_norm = normalize_text_for_matching(expected_title)
+
+    candidate_author = normalize_text_for_matching(
+        candidate.get("author_name", "")
+    )
+    expected_author_norm = normalize_text_for_matching(expected_author or "")
+
+    # Coincidencia exacta o parcial de título.
+    if candidate_title == expected_title_norm:
+        score += 10
+    elif expected_title_norm in candidate_title:
+        score += 6
+    elif candidate_title in expected_title_norm:
+        score += 4
+
+    # Coincidencia de autor.
+    if expected_author_norm:
+        if candidate_author == expected_author_norm:
+            score += 10
+        elif expected_author_norm in candidate_author:
+            score += 6
+        elif candidate_author in expected_author_norm:
+            score += 4
+
+    # Preferimos obras con año de primera publicación.
+    if candidate.get("publication_year"):
+        score += 2
+
+    # Preferimos candidatos con portada.
+    if candidate.get("cover_url"):
+        score += 1
+
+    # Penalizamos títulos que suelen indicar material secundario.
+    suspicious_terms = [
+        "study guide",
+        "summary",
+        "analysis",
+        "companion",
+        "sparknotes",
+        "supersummary",
+        "graphic novel",
+    ]
+
+    if any(term in candidate_title for term in suspicious_terms):
+        score -= 8
+
+    return score
+
 
 def normalize_openlibrary_result(raw_doc):
     """
@@ -102,7 +208,7 @@ def normalize_openlibrary_result(raw_doc):
 
 def get_openlibrary_candidates(title, author=None, limit=5):
     """
-    Busca y normaliza candidatos de libros desde Open Library.
+    Busca, normaliza y ordena candidatos de libros desde Open Library.
 
     Parameters
     ----------
@@ -118,7 +224,7 @@ def get_openlibrary_candidates(title, author=None, limit=5):
     Returns
     -------
     list[dict]
-        Lista de candidatos normalizados.
+        Lista de candidatos normalizados y ordenados por score interno.
     """
     raw_response = search_openlibrary_book(
         title=title,
@@ -128,8 +234,24 @@ def get_openlibrary_candidates(title, author=None, limit=5):
 
     docs = raw_response.get("docs", [])
 
-    return [
+    candidates = [
         normalize_openlibrary_result(doc)
         for doc in docs
     ]
+
+    for candidate in candidates:
+        candidate["match_score"] = score_openlibrary_candidate(
+            candidate=candidate,
+            expected_title=title,
+            expected_author=author,
+        )
+
+    candidates.sort(
+        key=lambda item: (
+            -item["match_score"],
+            item.get("title", ""),
+        )
+    )
+
+    return candidates
 
