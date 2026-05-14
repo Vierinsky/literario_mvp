@@ -262,9 +262,20 @@ def get_openlibrary_candidates(title, author=None, limit=5):
         title=title,
         author=author,
         limit=limit,
+        search_mode="structured",
     )
 
     docs = raw_response.get("docs", [])
+
+    if not docs:
+        raw_response = search_openlibrary_book(
+            title=title,
+            author=author,
+            limit=limit,
+            search_mode="free",
+        )
+        
+        docs = raw_response.get("docs", [])
 
     candidates = [
         normalize_openlibrary_result(doc)
