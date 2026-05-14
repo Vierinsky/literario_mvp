@@ -1,8 +1,52 @@
+import json
+from pathlib import Path
 import requests
 
 from django.core.management.base import BaseCommand
 
 from catalog.external_sources import get_openlibrary_candidates
+
+
+def save_candidates_to_json(candidates, output_path, query_metadata):
+    """
+    Guarda candidatos normalizados en un archivo JSON.
+
+    Parameters
+    ----------
+    candidates : list[dict]
+        Lista de candidatos normalizados desde fuentes externas.
+
+    output_path : str
+        Ruta donde se guardará el archivo JSON.
+
+    query_metadata : dict
+        Metadata de la consulta realizada, como título, autor y fuente.
+
+    Returns
+    -------
+    Path
+        Ruta final del archivo guardado.
+    """
+    path = Path(output_path)
+
+    # Crea la carpeta destino si todavía no existe
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    payload = {
+        "query": query_metadata,
+        "candidates": candidates,
+    }
+
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(
+            payload,
+            file,
+            ensure_ascii=False,
+            indent=2,
+            default=str,
+        )
+
+    return path
 
 class Command(BaseCommand):
     """
@@ -44,6 +88,13 @@ class Command(BaseCommand):
             help="Cantidad máxima de resultados a mostrar.",
         )
 
+        parser.add_argument(
+            "--output",
+            required=False,
+            default="",
+            help="Ruta opcional para guardar los candidatos normalizados en JSON.",
+        )
+
     def handle(self, *args, **options):
         """
         Ejecuta la búsqueda de metadata externa.
@@ -59,6 +110,7 @@ class Command(BaseCommand):
         title = options["title"]
         author = options["author"]
         limit = options["limit"]
+        output = options["output"]
 
         self.stdout.write("")
         self.stdout.write(
@@ -122,7 +174,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"    Cover: {candidate['cover_url'] or 'sin dato'}"
             )
-            
+
 
             subjects = candidate.get("subjects", [])
 
@@ -132,3 +184,22 @@ class Command(BaseCommand):
                 )
 
             self.stdout.write("")
+
+        if output:
+            saved_path = save_candidates_to_json(
+                candidates=candidates,
+                output_path=output,
+                query_metadata={
+                    "title": title,
+                    "author": author,
+                    "source": "openlibrary",
+                    "limit": limit,
+                },
+            )
+
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Candidatos guardados en: {saved_path}"
+                )
+            )
+
