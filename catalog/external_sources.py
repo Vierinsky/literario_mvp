@@ -224,7 +224,8 @@ def normalize_openlibrary_result(raw_doc):
         "author_name": author_names[0] if author_names else "",
         "publication_year": raw_doc.get("first_publish_year"),
         "isbn": isbn_values[0] if isbn_values else "",
-        "original_language": languages[0] if languages else "",
+        "original_language": "",
+        "language_hints": languages[:10],
         "cover_url": cover_url,
         "subjects": subjects[:20],
         "raw": raw_doc,
@@ -274,7 +275,7 @@ def get_openlibrary_candidates(title, author=None, limit=5):
             limit=limit,
             search_mode="free",
         )
-        
+
         docs = raw_response.get("docs", [])
 
     candidates = [

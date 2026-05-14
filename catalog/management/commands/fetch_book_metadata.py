@@ -113,8 +113,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"    Open Library ID: {candidate['external_openlibrary_id']}"
             )
+            
+            language_hints = candidate.get("language_hints", [])
+            
             self.stdout.write(
-                f"    Idioma: {candidate['original_language'] or 'sin dato'}"
+                f"    Idiomas detectados: {', '.join(language_hints) if language_hints else 'sin dato'}"
             )
             self.stdout.write(
                 f"    Cover: {candidate['cover_url'] or 'sin dato'}"
