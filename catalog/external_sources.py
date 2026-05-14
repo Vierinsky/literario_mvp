@@ -3,12 +3,13 @@ import unicodedata
 
 OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 
-def search_openlibrary_book(title, author=None, limit=5):
+def search_openlibrary_book(title, author=None, limit=5, search_mode="structured"):
     """
     Busca libros en Open Library usando título y, opcionalmente, autor.
 
-    Esta función consulta la Search API de Open Library y retorna la
-    respuesta JSON cruda. No escribe en la base de datos.
+    Permite dos modos de búsqueda:
+    - structured: usa parámetros title y author.
+    - free: usa q con título + autor.
 
     Parameters
     ----------
@@ -21,6 +22,9 @@ def search_openlibrary_book(title, author=None, limit=5):
     limit : int
         Cantidad máxima de resultados a solicitar.
 
+    search_mode : str
+        Modo de búsqueda. Puede ser 'structured' o 'free'.
+
     Returns
     -------
     dict
@@ -28,34 +32,54 @@ def search_openlibrary_book(title, author=None, limit=5):
 
     Raises
     ------
-    requests.HTTPError
-        Si la API responde con un error HTTP.
+    requests.RequestException
+        Si ocurre un error de red, timeout o respuesta HTTP inválida.
     """
+    fields = ",".join([
+        "key",
+        "title",
+        "author_name",
+        "author_key",
+        "first_publish_year",
+        "edition_count",
+        "isbn",
+        "language",
+        "cover_i",
+        "subject",
+    ])
+
+    if search_mode == "structured":
+
+        params = {
+            "title": title,
+            "limit": limit,
+            "fields": fields,
+            }
     
-    params = {
-        "title": title,
-        "limit": limit,
-        "fields": ",".join([
-            "key",
-            "title",
-            "author_name",
-            "author_key",
-            "first_publish_year",
-            "edition_count",
-            "isbn",
-            "language",
-            "cover_i",
-            "subject",
-        ]),
-        }
-    
-    if author:
-        params["author"] = author
+        if author:
+            params["author"] = author
+
+    elif search_mode == "free":
+        query_parts = [title]
+
+        if author:
+            query_parts.append(author)
+
+            params = {
+                "q": " ".join(query_parts),
+                "limit": limit,
+                "fields": fields,
+            }
+
+        else:
+            raise ValueError(
+                "search_mode debe ser 'structured' o 'free'."
+            )
 
     response = requests.get(
         OPEN_LIBRARY_SEARCH_URL,
         params=params,
-        timeout=15,
+        timeout=20,
     )
     
     response.raise_for_status()
@@ -210,6 +234,9 @@ def get_openlibrary_candidates(title, author=None, limit=5):
     """
     Busca, normaliza y ordena candidatos de libros desde Open Library.
 
+    Primero intenta una búsqueda estructurada por título y autor.
+    Si no encuentra resultados, usa una búsqueda libre con q.
+
     Parameters
     ----------
     title : str
@@ -225,6 +252,11 @@ def get_openlibrary_candidates(title, author=None, limit=5):
     -------
     list[dict]
         Lista de candidatos normalizados y ordenados por score interno.
+
+    Raises
+    ------
+    requests.RequestException
+        Si ambas búsquedas fallan por error de red o HTTP.
     """
     raw_response = search_openlibrary_book(
         title=title,
