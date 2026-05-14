@@ -39,16 +39,19 @@ def save_candidates_to_json(candidates, output_path, query_metadata, include_raw
     cleaned_candidates = []
 
     for candidate in candidates:
+        # Copia superficial del candidato para no modificar el objeto original.
         candidate_copy = candidate.copy()
 
+        # En modo liviano eliminamos la respuesta cruda de la API.
         if not include_raw:
+            
             candidate_copy.pop("raw", None)
 
         cleaned_candidates.append(candidate_copy)
 
     payload = {
         "query": query_metadata,
-        "candidates": candidates,
+        "candidates": cleaned_candidates,
     }
 
     with path.open("w", encoding="utf-8") as file:
