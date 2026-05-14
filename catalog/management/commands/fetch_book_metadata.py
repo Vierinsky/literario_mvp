@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from catalog.external_sources import get_openlibrary_candidates
 
 
-def save_candidates_to_json(candidates, output_path, query_metadata):
+def save_candidates_to_json(candidates, output_path, query_metadata, include_raw=False):
     """
     Guarda candidatos normalizados en un archivo JSON.
 
@@ -22,6 +22,10 @@ def save_candidates_to_json(candidates, output_path, query_metadata):
     query_metadata : dict
         Metadata de la consulta realizada, como título, autor y fuente.
 
+    include_raw : bool
+        Si es True, conserva la respuesta cruda completa de la fuente externa.
+        Si es False, elimina el campo raw para dejar un archivo más liviano.
+
     Returns
     -------
     Path
@@ -31,6 +35,16 @@ def save_candidates_to_json(candidates, output_path, query_metadata):
 
     # Crea la carpeta destino si todavía no existe
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    cleaned_candidates = []
+
+    for candidate in candidates:
+        candidate_copy = candidate.copy()
+
+        if not include_raw:
+            candidate_copy.pop("raw", None)
+
+        cleaned_candidates.append(candidate_copy)
 
     payload = {
         "query": query_metadata,
@@ -95,6 +109,12 @@ class Command(BaseCommand):
             help="Ruta opcional para guardar los candidatos normalizados en JSON.",
         )
 
+        parser.add_argument(
+            "--include-raw",
+            action="store_true",
+            help="Incluye la respuesta cruda completa de la API en el JSON de salida.",
+        )
+
     def handle(self, *args, **options):
         """
         Ejecuta la búsqueda de metadata externa.
@@ -111,6 +131,7 @@ class Command(BaseCommand):
         author = options["author"]
         limit = options["limit"]
         output = options["output"]
+        include_raw = options["include_raw"]
 
         self.stdout.write("")
         self.stdout.write(
@@ -195,6 +216,7 @@ class Command(BaseCommand):
                     "source": "openlibrary",
                     "limit": limit,
                 },
+                include_raw=include_raw,
             )
 
             self.stdout.write(
