@@ -1,3 +1,5 @@
+import requests
+
 from django.core.management.base import BaseCommand
 
 from catalog.external_sources import get_openlibrary_candidates
@@ -71,11 +73,26 @@ class Command(BaseCommand):
         self.stdout.write("Fuente: Open Library")
         self.stdout.write("")
 
-        candidates = get_openlibrary_candidates(
-            title=title,
-            author=author,
-            limit=limit,
-        )
+        try:
+            candidates = get_openlibrary_candidates(
+                title=title,
+                author=author,
+                limit=limit,
+            )
+        except requests.exceptions.Timeout:
+            self.stdout.write(
+                self.style.ERROR(
+                    "La consulta a Open Library agotó el tiempo de espera."
+                )
+            )
+            return
+        except requests.exceptions.RequestException as error:
+            self.stdout.write(
+                self.style.ERROR(
+                    f"Error consultando Open Library: {error}"
+                )
+            )
+            return
 
         if not candidates:
             self.stdout.write(
